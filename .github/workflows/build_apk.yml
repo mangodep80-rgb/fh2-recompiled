@@ -37,7 +37,7 @@ jobs:
       - name: Checkout private repo for default.xex
         uses: actions/checkout@v4
         with:
-          repository: 'https://api.github.com/repos/mangodep80-rgb/fh2-xex' # <-- GANTI BAGIAN INI
+          repository: 'mangodep80-rgb/fh2-xex' # <-- GANTI BAGIAN INI
           token: ${{ secrets.FH2_XEX_TOKEN }}
           path: 'assets/game_root'
 
