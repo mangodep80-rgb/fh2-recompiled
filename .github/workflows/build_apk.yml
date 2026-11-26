@@ -1,1 +1,80 @@
 
+
+name: Build FH2 Recompiled APK
+
+on:
+  workflow_dispatch: # Jalankan manual dari tab Actions
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout main repository
+        uses: actions/checkout@v4
+
+      - name: Free up disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          df -h
+
+      - name: Add 12GB Swap Space
+        run: |
+          sudo fallocate -l 12G /swapfile
+          sudo chmod 600 /swapfile
+          sudo mkswap /swapfile
+          sudo swapon /swapfile
+          free -h
+
+      - name: Install system dependencies (Clang 20, Ninja, CMake)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget software-properties-common gnupg ninja-build cmake python3 git unzip
+          wget https://llvm.org
+          chmod +x llvm.sh
+          sudo ./llvm.sh 20
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Android SDK, NDK 28.2 & CMake 3.30.5
+        uses: android-actions/setup-android@v3
+        with:
+          packages: 'platforms;android-34 build-tools;34.0.0 ndk;28.2.13676358 cmake;3.30.5'
+
+      - name: Fetch third-party SDK sources
+        run: python3 tools/fetch_thirdparty.py
+
+      - name: Checkout private repo for default.xex
+        uses: actions/checkout@v4
+        with:
+          repository: 'https://api.github.com/repos/mangodep80-rgb/fh2-xex' # <-- GANTI BAGIAN INI
+          token: ${{ secrets.FH2_XEX_TOKEN }}
+          path: 'assets/game_root'
+
+      - name: Verify default.xex exists
+        run: |
+          ls -lh assets/game_root/
+          test -f assets/game_root/default.xex
+
+      - name: Build Linux host tools & generate C++ code
+        run: |
+          cmake -S app -B app/out/linux -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_COMPILER=clang-20 \
+            -DCMAKE_CXX_COMPILER=clang++-20 \
+            -DREXSDK_DIR="$PWD/sdk"
+          cmake --build app/out/linux
+
+      - name: Build Android APK
+        run: |
+          chmod +x build_android.sh
+          ./build_android.sh
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: fh2-recompiled-apk
+          path: android/app/build/outputs/apk/release/app-release.apk
