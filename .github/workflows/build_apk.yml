@@ -49,8 +49,8 @@ jobs:
       - name: Build SDK & generate C++ code
         run: |
           chmod +x build_pc.sh tools/codegen.sh
-          ./build_pc.sh || true
-          REXGLUE=$PWD/sdk/out/linux-amd64/rexglue tools/codegen.sh app
+          ./build_pc.sh || cat app/codegen.log
+          REXGLUE=$PWD/sdk/out/linux-amd64/rexglue tools/codegen.sh app || (cat app/codegen.log && exit 1)
 
       - name: Build Android APK
         run: |
