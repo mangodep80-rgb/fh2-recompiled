@@ -12,7 +12,7 @@ jobs:
 
       - name: Free up disk space
         run: |
-          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          sudo rm -rf /usr/share/dotnet /opt/ghc /opt/hostedtoolcache/CodeQL
           df -h
 
       - name: Install system dependencies (Clang 20, Ninja, CMake)
@@ -26,10 +26,10 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Setup Android SDK, NDK 28.2 & CMake 3.30.5
-        uses: android-actions/setup-android@v3
-        with:
-          packages: 'platforms;android-34 build-tools;34.0.0 ndk;28.2.13676358 cmake;3.30.5'
+      - name: Setup Android NDK 28.2 & CMake 3.30.5
+        run: |
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "ndk;28.2.13676358" "cmake;3.30.5"
 
       - name: Fetch third-party SDK sources
         run: python3 tools/fetch_thirdparty.py
