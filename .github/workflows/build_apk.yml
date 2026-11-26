@@ -46,14 +46,11 @@ jobs:
           ls -lh assets/game_root/
           test -f assets/game_root/default.xex
 
-      - name: Build Linux host tools & generate C++ code
+      - name: Build SDK & generate C++ code
         run: |
-          cmake -S app -B app/out/linux -G Ninja \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_C_COMPILER=clang-20 \
-            -DCMAKE_CXX_COMPILER=clang++-20 \
-            -DREXSDK_DIR="$PWD/sdk"
-          cmake --build app/out/linux
+          chmod +x build_pc.sh tools/codegen.sh
+          ./build_pc.sh || true
+          REXGLUE=$PWD/sdk/out/linux-amd64/rexglue tools/codegen.sh app
 
       - name: Build Android APK
         run: |
